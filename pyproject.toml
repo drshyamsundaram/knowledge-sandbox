@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "knowledge-sandbox"
+version = "0.1.0"
+description = "A self-contained, directory-scanning RDF knowledge management dashboard."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Knowledge Sandbox contributors"}]
+keywords = ["knowledge-management", "ontology", "rdf", "sparql", "dashboard"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+]
+dependencies = ["rdflib>=6.0", "PyYAML>=6.0", "fastapi>=0.110", "uvicorn[standard]>=0.27", "Pillow>=10.0", "pypdf>=5.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "httpx>=0.27"]
+
+[project.scripts]
+knowledge-sandbox = "kmsandbox.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["kmsandbox*"]

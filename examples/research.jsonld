@@ -1,0 +1,1 @@
+{"@context":{"schema":"https://schema.org/","Dataset":"schema:Dataset","name":"schema:name"},"@id":"https://example.org/cohort","@type":"Dataset","name":"Retinal imaging cohort"}

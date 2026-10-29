@@ -1,0 +1,13 @@
+sandbox:
+  title: "Research Knowledge Management Sandbox"
+  directories:
+    - "./examples"
+  output: "./dist"
+  exclude_patterns: [".git", "node_modules", "__pycache__", "dist"]
+  template:
+    product_name: "Research Knowledge Hub"
+    product_tagline: "Research intelligence · local knowledge inventory"
+    introduction: "A governed map of research documents and semantic assets."
+    primary_color: "#55E5BD"
+    accent_color: "#A98BFF"
+    footer_html: "<small>Internal research knowledge product</small>"

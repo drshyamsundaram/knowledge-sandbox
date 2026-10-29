@@ -1,0 +1,176 @@
+Metadata-Version: 2.4
+Name: knowledge-sandbox
+Version: 0.1.0
+Summary: A self-contained, directory-scanning RDF knowledge management dashboard.
+Author: Knowledge Sandbox contributors
+License: MIT
+Keywords: knowledge-management,ontology,rdf,sparql,dashboard
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: rdflib>=6.0
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: fastapi>=0.110
+Requires-Dist: uvicorn[standard]>=0.27
+Requires-Dist: Pillow>=10.0
+Requires-Dist: pypdf>=5.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: httpx>=0.27; extra == "dev"
+Dynamic: license-file
+
+# Knowledge Sandbox
+
+Knowledge Sandbox is a local-first product for inventorying knowledge assets across one or more directories. It produces a portable HTML dashboard and offers an optional read-only REST API for asset discovery, ontology profiles, and SPARQL queries. It is fully standalone: no `onto_field`, database, or cloud service is required.
+
+## Features
+
+- Recursive, read-only scans of configured folders.
+- Searchable static dashboard with ontology health and schema details.
+- RDF/OWL/Turtle/JSON-LD parsing, including triples, classes, properties, namespaces, and predicates.
+- Identification and lightweight metadata for PDF, images, spreadsheets, Word files, presentations, Markdown, CSV/TSV, and archives.
+- FastAPI service with Swagger/OpenAPI documentation.
+- Fault-tolerant inspection: malformed or unreadable files remain visible with an inspection note.
+
+## Requirements
+
+- Python 3.9+
+- Read access to the configured knowledge-base directories
+
+## Quick start
+
+```powershell
+cd D:\ss_ai_workspace\openai\projects\onto_field_v6\knowledge_sandbox
+python -m pip install -e ".[dev]"
+python -m kmsandbox.cli build sandbox.yaml
+```
+
+Open `dist/knowledge_sandbox.html` afterwards.
+
+Use `python -m kmsandbox.cli` as the default command: it works even where Python Scripts is absent from `PATH` or application policy blocks generated console `.exe` shims. When console scripts work, `knowledge-sandbox build sandbox.yaml` is equivalent.
+
+## Configure a knowledge base
+
+```yaml
+sandbox:
+  title: "Research Knowledge Management Sandbox"
+  directories:
+    - "D:/knowledge-base"
+    - "./examples"
+  output: "./dist"
+  exclude_patterns: [".git", "node_modules", "__pycache__", "dist"]
+
+  template:
+    product_name: "Research Knowledge Hub"
+    product_tagline: "Research intelligence · local knowledge inventory"
+    introduction: "A governed map of research documents and semantic assets."
+    primary_color: "#55E5BD"
+    accent_color: "#A98BFF"
+    footer_html: "<small>Internal use only</small>"
+```
+
+Relative paths are resolved from the configuration file. `footer_html` is deliberately rendered as HTML; only use trusted values.
+
+## Dashboard
+
+The HTML dashboard provides summary cards for assets, ontologies, RDF triples, and classes; a full-text filter; an ontology filter; and ontology-level parse health, schema counts, sampled classes, predicates, and namespaces. The static report embeds its inventory metadata, so review it before sharing outside your organization.
+
+## Recognised asset types
+
+| Group | Formats | Metadata collected |
+|---|---|---|
+| Ontologies | Turtle, RDF/XML, OWL, JSON-LD, N3, N-Triples, TriG | triples, classes, properties, namespaces, predicate samples |
+| PDF | `.pdf` | page count |
+| Images | PNG, JPEG, GIF, WebP, BMP, TIFF | dimensions, colour mode, frames |
+| Spreadsheets | XLSX, XLS, CSV, TSV | XLSX worksheet names; CSV/TSV headers and column count |
+| Documents | DOCX, DOC, RTF, TXT, Markdown | DOCX paragraphs; Markdown headings and lines |
+| Presentations | PPTX | slide count |
+| Archives | ZIP, 7z | ZIP item count |
+
+Unknown extensions remain in the inventory as `Other file` assets.
+
+## Build the static dashboard
+
+```powershell
+python -m kmsandbox.cli build sandbox.yaml
+python -m kmsandbox.cli build sandbox.yaml --output .\reports --filename research-hub.html
+```
+
+## Run the REST API
+
+```powershell
+python -m kmsandbox.cli serve sandbox.yaml --host 127.0.0.1 --port 8000
+```
+
+Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) for interactive API documentation.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | Status, scan timestamp, and summary |
+| `GET /api/assets?kind=Ontology&search=study` | Filtered asset inventory |
+| `GET /api/assets/{asset_id}` | One asset and metadata |
+| `GET /api/ontologies` | Semantic assets only |
+| `GET /api/ontologies/{asset_id}/schema` | Ontology profile |
+| `POST /api/query` | Read-only SPARQL `SELECT` / `ASK` |
+| `POST /api/rescan` | Refresh configured folders |
+
+### Query example
+
+Request `GET /api/ontologies`, copy an `id`, then run:
+
+```powershell
+$body = @{
+  asset_id = "YOUR_ASSET_ID"
+  scope = "asset"
+  query = "SELECT ?subject ?predicate ?object WHERE { ?subject ?predicate ?object }"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/query?limit=50" -ContentType "application/json" -Body $body
+```
+
+Use `scope: asset` by default. Use `scope: combined` only for deliberate cross-ontology queries.
+
+## Security boundaries
+
+- The default host is `127.0.0.1`. Add authentication and network controls before exposing the service remotely.
+- Only `SELECT` and `ASK` queries are accepted. Updates, remote `SERVICE`, and graph-changing operations are blocked.
+- Query responses are capped at 500 rows.
+- APIs use scan-generated asset IDs, not caller-provided filesystem paths.
+- Scans do not modify source files.
+
+## Development
+
+```powershell
+python -m pip install -e ".[dev]"
+python -m pytest tests -q
+```
+
+## Project layout
+
+```text
+knowledge_sandbox/
+├── kmsandbox/      # scanner, dashboard, API, config, and CLI
+├── examples/       # sample semantic and document assets
+├── tests/
+├── sandbox.yaml
+├── requirements.txt
+└── pyproject.toml
+```
+
+## Troubleshooting
+
+| Problem | Resolution |
+|---|---|
+| `knowledge-sandbox` is not recognized | Use `python -m kmsandbox.cli build sandbox.yaml`. |
+| A directory is skipped | Correct the path in `sandbox.yaml`. |
+| Ontology status is `attention` | Verify RDF syntax and serialization/extension. |
+| A file has an inspection note | Check that it is readable, supported, and not corrupt or password-protected. |
+
+## License
+
+MIT. See [LICENSE](LICENSE).

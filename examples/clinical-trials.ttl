@@ -1,0 +1,6 @@
+@prefix ct: <https://example.org/clinical-trials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+ct:Study a owl:Class ; rdfs:label "Clinical study" .
+ct:Participant a owl:Class ; rdfs:label "Participant" .
+ct:enrolledIn a owl:ObjectProperty ; rdfs:domain ct:Participant ; rdfs:range ct:Study .

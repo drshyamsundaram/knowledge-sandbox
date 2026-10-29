@@ -1,0 +1,2 @@
+[console_scripts]
+knowledge-sandbox = kmsandbox.cli:main
